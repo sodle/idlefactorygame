@@ -12,6 +12,7 @@ import { ItemDisplay } from "./ItemDisplay";
 import { useProduction } from "../hooks/useSimulation";
 import { useCalculateRates } from "../hooks/useCalculateRates";
 import { formatNumber, formatSeconds } from "../numberFormatter";
+import { useCharts } from "../hooks/useCharts";
 
 type Props = {
     ticksPerSecond: number;
@@ -72,10 +73,9 @@ export function App({ ticksPerSecond }: Props) {
     const sections: SMap<JSX.Element[]> = {};
     const sectionData = GAME.sections.find((x) => x.Name == currentTab);
 
-    const rates = useCalculateRates(
-        state,
-        sectionData?.SubSections.flatMap((x) => x.Items) ?? [],
-    );
+    const rates = useCalculateRates(state, GAME.allItemNames);
+
+    const charts = useCharts(rates);
 
     sectionData?.SubSections.forEach((subSection) => {
         sections[currentTab!] ??= [];
@@ -177,6 +177,7 @@ export function App({ ticksPerSecond }: Props) {
                               }
                             : undefined
                     }
+                    charts={charts}
                     {...rates}
                 />,
             );

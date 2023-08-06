@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import _ from "lodash";
 import { howManyRecipesCanBeMade } from "../assembly";
 import GAME from "../values";
-import { Items, partialItems } from "../content/itemNames";
+import { Items, itemsMap, partialItems } from "../content/itemNames";
 import {
     Button,
     Row,
@@ -25,6 +25,8 @@ import { formatNumber as d, formatSeconds } from "../numberFormatter";
 import { useCalculateRates } from "../hooks/useCalculateRates";
 import { useProduction } from "../hooks/useSimulation";
 import { Assembler } from "./Assembler";
+import { ProductionSample, SampleBuffer } from "../hooks/useCharts";
+import { AxisOptions, Chart } from "react-charts";
 
 type func = () => void;
 
@@ -39,6 +41,7 @@ type Props = {
     onMouseover: func | undefined;
     disableRecipe: func;
     currentClickAmount: number;
+    charts: itemsMap<SampleBuffer>;
 } & ReturnType<typeof useCalculateRates>;
 
 export function ItemDisplay({
@@ -48,6 +51,7 @@ export function ItemDisplay({
     boxButtons,
     makeByHand,
     onMouseover,
+    charts,
     disableRecipe,
     assemblersMakingThis,
     state,
@@ -220,6 +224,26 @@ export function ItemDisplay({
         <span className={`history-display ${historyVisible}`}>{g}</span>
     );
 
+    const primaryAxis = useMemo(
+        (): AxisOptions<ProductionSample> => ({
+            getValue: (sample) => sample.date,
+            scaleType: "localTime",
+        }),
+        [],
+    );
+
+    const secondaryAxes = useMemo(
+        (): AxisOptions<ProductionSample>[] => [
+            {
+                getValue: (sample) => sample.sample,
+            },
+            {
+                getValue: (sample) => sample.sample,
+            },
+        ],
+        [],
+    );
+
     if (historyVisible) {
         const overlay = (
             <Popover className={"popover-no-max-width"}>
@@ -230,6 +254,14 @@ export function ItemDisplay({
                     <Table>
                         <tbody>{othersConsumingThis}</tbody>
                     </Table>
+                    <br />
+                    <Chart
+                        options={{
+                            data: charts[itemName].data,
+                            primaryAxis,
+                            secondaryAxes,
+                        }}
+                    />
                 </Popover.Body>
             </Popover>
         );
